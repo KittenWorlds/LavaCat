@@ -19,7 +19,7 @@ resolver = "2"
 version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
-repository = "https://github.com/Ink-dark/LavaCat"
+repository = "https://github.com/KittenWorlds/LavaCat"
 # MSRV 基线：1.90。取依赖中最高 MSRV 并留出余量
 # （vello_cpu 的 MSRV 历史在 1.88–1.92 间抖动，
 #  见 docs/decisions/2026-10-01-crate-selection.md）

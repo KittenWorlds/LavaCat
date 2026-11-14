@@ -29,7 +29,7 @@ MusKitty 的**不造轮子**分支。MusKitty 从零手写浏览器核心模块�
 
 ## Build & Test Commands
 
-workspace 根目录（`Ink-dark/LavaCat`）：
+workspace 根目录（`KittenWorlds/LavaCat`）：
 
 ```bash
 cargo check --workspace
@@ -77,7 +77,7 @@ cargo clippy --all-targets -- -D warnings
 ## Architecture
 
 ```
-LavaCat/                                # 主仓库 (Ink-dark/LavaCat)，workspace 协调中心
+LavaCat/                                # 主仓库 (KittenWorlds/LavaCat)，workspace 协调中心
 ├── Cargo.toml                          # workspace 成员：8 个 facade crate
 ├── AGENTS.md                           # 硬约束指南（本文件）
 ├── deny.toml                           # cargo-deny 依赖门禁（许可证白名单 + advisory 放行清单）
