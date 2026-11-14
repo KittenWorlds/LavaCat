@@ -27,7 +27,9 @@ use std::borrow::Borrow;
 use std::fmt;
 
 use cssparser::ToCss;
-use lavacat_dom::{Document, ElementData, Namespace, NodeId, NodeKind, QuirksMode as DomQuirksMode};
+use lavacat_dom::{
+    Document, ElementData, Namespace, NodeId, NodeKind, QuirksMode as DomQuirksMode,
+};
 use precomputed_hash::PrecomputedHash;
 use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
 use selectors::context::{

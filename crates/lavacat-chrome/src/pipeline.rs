@@ -45,7 +45,9 @@ use lavacat_css::{
 use lavacat_dom::{Document, Event, EventLoop, NodeId, Task, TaskContext};
 use lavacat_html::ParseOptions;
 use lavacat_layout::{Fragment, Rect as LayoutRect, TextRun};
-use lavacat_paint::{Color, Command, GradientStop, Image, Rect as PaintRect, Scene, Size, TextGlyph};
+use lavacat_paint::{
+    Color, Command, GradientStop, Image, Rect as PaintRect, Scene, Size, TextGlyph,
+};
 use lavacat_text::TextShaper;
 
 /// 一个已解析、已级联的页面。

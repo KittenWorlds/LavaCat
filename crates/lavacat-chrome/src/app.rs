@@ -2047,7 +2047,11 @@ mod error_page_tests {
 
     /// 按树序收集文档中的元素局部名。
     fn element_names(document: &lavacat_dom::Document) -> Vec<String> {
-        fn walk(document: &lavacat_dom::Document, node: lavacat_dom::NodeId, out: &mut Vec<String>) {
+        fn walk(
+            document: &lavacat_dom::Document,
+            node: lavacat_dom::NodeId,
+            out: &mut Vec<String>,
+        ) {
             for child in document.children(node) {
                 if let Some(NodeKind::Element(data)) = document.node(child) {
                     out.push(data.name.clone());

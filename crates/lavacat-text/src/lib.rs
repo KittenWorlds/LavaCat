@@ -1229,7 +1229,11 @@ mod tests {
             )
             .expect("register");
         let resolved = FontResolver::with_registry(&only_normal)
-            .resolve_font_with(&["LavaCatItalicFallback".to_owned()], 400, FontStyle::Italic)
+            .resolve_font_with(
+                &["LavaCatItalicFallback".to_owned()],
+                400,
+                FontStyle::Italic,
+            )
             .expect("italic falls back to normal face");
         assert_eq!(resolved.data().as_ref(), regular.as_slice());
     }

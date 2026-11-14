@@ -571,7 +571,10 @@ mod tests {
             .fetch(&Request {
                 url: server.base().to_owned(),
                 method: Method::Get,
-                headers: vec![("X-LavaCat-Marker".to_owned(), "lavacat-header-test".to_owned())],
+                headers: vec![(
+                    "X-LavaCat-Marker".to_owned(),
+                    "lavacat-header-test".to_owned(),
+                )],
             })
             .expect("fetch");
 

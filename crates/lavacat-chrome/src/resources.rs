@@ -275,7 +275,8 @@ pub fn fetch_document(fetcher: &dyn NetworkFetcher, url: &str) -> Result<Fetched
     }
     let content_type = content_type_header(&response.headers);
     let decoded = decode_document(content_type, &response.body);
-    let document = lavacat_html::parse_document(&decoded.text, lavacat_html::ParseOptions::default());
+    let document =
+        lavacat_html::parse_document(&decoded.text, lavacat_html::ParseOptions::default());
     // 子资源 base = 最终 URL（重定向落点）；mock 后端无重定向时即请求 URL
     let data = fetch_page_data(
         fetcher,
