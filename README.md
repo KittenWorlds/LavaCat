@@ -1,5 +1,5 @@
-# Nexty
-Muskitty 不造轮子分支
+# LavaCat
+不同于Chromium、FireFox（Gecko）等的下一代浏览器内核，由Rust构建。
 
 ## CI / CD
 
