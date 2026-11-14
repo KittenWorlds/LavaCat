@@ -1,0 +1,90 @@
+name: Bug 报告
+description: 行为与规范或预期不符（解析、DOM、级联、布局、绘制、网络、脚本、外壳）
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。提交之前请确认：
+
+        - 已在 `main` 的最新提交上复现（旧提交上的问题可能已修）
+        - 搜索过 Issues，没有同类报告
+        - 这是行为问题，不是安全问题；安全问题请按
+          [CONTRIBUTING.md](https://github.com/KittenWorlds/LavaCat/blob/main/CONTRIBUTING.md)
+          的说明私下联系维护者
+
+  - type: input
+    id: commit
+    attributes:
+      label: 复现用的提交 / 版本
+      description: "`git rev-parse --short HEAD`，或 Release 制品版本号"
+      placeholder: b2ee6c8
+    validations:
+      required: true
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: 受影响层
+      description: 不确定就选「不确定」，维护者会补分类
+      options:
+        - 解析（lavacat-html）
+        - DOM / 事件（lavacat-dom）
+        - 级联 / 样式（lavacat-css）
+        - 布局（lavacat-layout）
+        - 文字整形（lavacat-text）
+        - 绘制 / 光栅（lavacat-paint）
+        - 网络（lavacat-network）
+        - 脚本（JSRT）
+        - 外壳 / 输入（lavacat-chrome）
+        - 不确定
+    validations:
+      required: true
+
+  - type: input
+    id: platform
+    attributes:
+      label: 平台
+      description: 操作系统版本与目标三元组（若已知）
+      placeholder: Windows 11 26100 / x86_64-pc-windows-msvc
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 最小复现优先——能贴最小 HTML / CSS 就不要贴整站
+      placeholder: |
+        1. node tools/acceptance/server.cjs
+        2. cargo run -p lavacat-chrome --bin lavacat
+        3. 打开 http://127.0.0.1:8472/...
+        4. 滚轮下滚 3 格
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      description: 有规范条款或 WPT 用例名请一并给出；「Chromium 是这样」只作旁证
+      placeholder: 依据 CSS 2.2 §8.3.1，相邻块的外边距应折叠为 …
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 截图、片段树输出、报错串、日志都贴在这里
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 补充信息
+      description: 已排查过的方向、相关 ADR / issue、其它内核的对照表现（可选）
+    validations:
+      required: false

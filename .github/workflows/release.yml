@@ -66,30 +66,30 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      # 发布前确保该提交测试全绿（nexty-chrome 测试为无头逻辑测试，无需窗口）
+      # 发布前确保该提交测试全绿（lavacat-chrome 测试为无头逻辑测试，无需窗口）
       - name: Test
         run: cargo test --workspace --target ${{ matrix.target }}
 
       - name: Build release binary
-        run: cargo build --release --bin nexty --target ${{ matrix.target }}
+        run: cargo build --release --bin lavacat --target ${{ matrix.target }}
 
       - name: Package (tar.gz + sha256)
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p dist
-          BIN="nexty${{ matrix.ext }}"
+          BIN="lavacat${{ matrix.ext }}"
           SRC="target/${{ matrix.target }}/release/$BIN"
           # Linux 额外剥离符号（Windows 由 [profile.release] strip=true 处理）
           if [ "${{ matrix.os }}" = "ubuntu-22.04" ]; then
             strip "$SRC"
           fi
-          tar -czf "dist/nexty-${{ matrix.target }}.tar.gz" -C "target/${{ matrix.target }}/release" "$BIN"
-          sha256sum "dist/nexty-${{ matrix.target }}.tar.gz" > "dist/nexty-${{ matrix.target }}.tar.gz.sha256"
+          tar -czf "dist/lavacat-${{ matrix.target }}.tar.gz" -C "target/${{ matrix.target }}/release" "$BIN"
+          sha256sum "dist/lavacat-${{ matrix.target }}.tar.gz" > "dist/lavacat-${{ matrix.target }}.tar.gz.sha256"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: nexty-${{ matrix.target }}
+          name: lavacat-${{ matrix.target }}
           path: dist/*
           if-no-files-found: error
 

@@ -1,6 +1,6 @@
 name: Bench (manual)
 
-# 手动触发的性能基准（nexty-chrome pipeline bench）。不挂 push/PR：
+# 手动触发的性能基准（lavacat-chrome pipeline bench）。不挂 push/PR：
 # 全页光栅的滚动风暴很重，且绝对数字依赖 runner 硬件。本作业的价值是
 # ①固定的可复现环境（同 runner 类内趋势可比）②机器无关的回归断言
 # （resize 合帧 runs、滚动 emit=0、shape≈1×chunks、metrics≤10——
@@ -50,7 +50,7 @@ jobs:
           BENCH_SCROLL_FRAMES: ${{ inputs.scroll_frames }}
         run: |
           set -o pipefail
-          cargo bench -p nexty-chrome --bench pipeline 2>&1 | tee bench-output.txt
+          cargo bench -p lavacat-chrome --bench pipeline 2>&1 | tee bench-output.txt
       - name: Append to job summary
         if: always()
         run: |

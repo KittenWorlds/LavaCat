@@ -1,0 +1,73 @@
+[package]
+name = "lavacat-chrome"
+description = "LavaCat 浏览器外壳：窗口、输入、导航与自绘 UI"
+version = "0.1.35"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[features]
+# 默认开启全部已实现能力。`window` 是二进制外壳本体（winit+wgpu），
+# 关闭后本 crate 只剩可无头测试的纯逻辑模块（history/ui/scrollbar/pipeline）。
+default = [
+    "pipeline", "resources", "render", "history", "ui", "scrollbar", "selection", "script", "window",
+]
+# 导航管线：HTML → 级联 → 布局 → 片段树 → paint 显示列表（纯逻辑，可测试）。
+pipeline = []
+# 子资源清单解析、并发抓取与解码编排（纯逻辑，可测试）。
+resources = []
+# 渲染隔离线程：panic 兜底，线程存活可继续服务。
+render = []
+# 会话历史栈（纯逻辑，可测试）。
+history = []
+# 自绘工具带状态机（纯逻辑，可测试）。
+ui = []
+# 滚动几何与拖拽状态机（纯逻辑，可测试）。
+scrollbar = []
+# 页面文本选区状态机（纯逻辑）+ 复制到系统剪贴板。
+selection = ["pipeline", "dep:arboard"]
+# 页面脚本编排（K5 T3）：ScriptHost 装配 + 事件间隙任务泵 + 重排脏位消费。
+# 依赖子资源清单收集（外链脚本清单/抓取）与导航管线（Page），引攀适配层
+# lavacat-jsrt-rquickjs 为可选依赖（kernel facade 不引攀；由本 feature 门控）。
+script = ["pipeline", "resources", "dep:lavacat-jsrt-rquickjs"]
+# 浏览器外壳本体：winit 事件循环 + wgpu 呈现（`run()` 入口）。
+# 依赖 winit / wgpu / pollster 与下层各 crate，故隐含它们。
+window = ["pipeline", "resources", "render", "history", "ui", "scrollbar", "selection", "script",
+    "dep:winit", "dep:wgpu", "dep:pollster"]
+
+[dependencies]
+lavacat-dom = { path = "../lavacat-dom", version = "0.1.0" }
+lavacat-html = { path = "../lavacat-html", version = "0.1.0" }
+lavacat-css = { path = "../lavacat-css", version = "0.1.0" }
+lavacat-layout = { path = "../lavacat-layout", version = "0.1.0" }
+lavacat-text = { path = "../lavacat-text", version = "0.1.0" }
+lavacat-paint = { path = "../lavacat-paint", version = "0.1.0" }
+lavacat-network = { path = "../lavacat-network", version = "0.1.0" }
+# 引擎适配层（K5 T3）：可选依赖，仅 `script` feature 引入——kernel facade
+# crate 不默认引攀（JSRT 可插拔，AGENTS.md Hard Rules）。
+lavacat-jsrt-rquickjs = { path = "../lavacat-jsrt-rquickjs", version = "0.1.1", optional = true }
+winit = { version = "0.30.13", optional = true }
+wgpu = { version = "29", optional = true }
+# wgpu 的异步初始化在 winit 事件循环外的同步入口完成
+pollster = { version = "0.4", optional = true }
+# 系统剪贴板（选区复制）。只要文本：关闭 default 的 image-data，避免引入
+# 图片剪贴板后端；选型与边界见 docs/decisions/2026-10-23-clipboard.md。
+arboard = { version = "3.7", default-features = false, optional = true }
+
+[dev-dependencies]
+# 仅测试用：构造 PNG 字节喂给资源编排测试（与 lavacat-paint 同一依赖）
+image = { version = "0.25.10", default-features = false, features = ["png"] }
+
+# 浏览器可执行入口，仅在 `window` feature 下构建（关闭 window 时无窗口可启）。
+[[bin]]
+name = "lavacat"
+path = "src/bin/lavacat.rs"
+required-features = ["window"]
+
+# 管线性能基准（性能轮 T1）：`harness = false` 的自管理入口，正文只认
+# BENCH_MODE=1（否则打印 skip 退出）。依赖 pipeline 的管线入口。
+[[bench]]
+name = "pipeline"
+harness = false
+required-features = ["pipeline"]

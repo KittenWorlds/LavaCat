@@ -1,4 +1,4 @@
-// Nexty 实机验收站（仅回环，端口 8472）。
+// LavaCat 实机验收站（仅回环，端口 8472）。
 //
 // 用途：为 Computer Use 实机验收提供可复现的页面与端点。浏览器本身没有
 // 无头模式，验收靠架构师点窗口；本服务器负责把「判据」变成固定 URL，
@@ -46,7 +46,7 @@ const ALIASES = {
   "/k5script": "batch2/k5/script-demo.html",
 };
 
-// K13 formats 页四张 8x8 fixture：URL → crates/nexty-paint/tests/data/ 下的
+// K13 formats 页四张 8x8 fixture：URL → crates/lavacat-paint/tests/data/ 下的
 // 文件名（复用解码单测的同一份二进制，不在 pages/ 重复入库）。
 const K13_IMAGES = {
   "/k13/img/png.png": "k13-8x8.png",
@@ -133,21 +133,21 @@ http
     }
     if (decoded === "/font/space-mono.ttf") {
       // 测试字体来自 text 层已入库的 OFL 字体，不在本目录复制一份
-      sendFile(res, join(REPO, "crates/nexty-text/tests/data/SpaceMono-Regular.ttf"));
+      sendFile(res, join(REPO, "crates/lavacat-text/tests/data/SpaceMono-Regular.ttf"));
       return;
     }
     if (decoded === "/favicon.ico") {
       // K13 回落图标：与两态页 ① 的 link 图标同一份 16x16 橙色 ICO，
       // 但 URL 不同 —— /stats 可分别断言 link 优先与 favicon.ico 回落
-      sendFile(res, join(REPO, "crates/nexty-paint/tests/data/k13-16x16.ico"));
+      sendFile(res, join(REPO, "crates/lavacat-paint/tests/data/k13-16x16.ico"));
       return;
     }
     if (decoded === "/k13-link-icon.ico") {
-      sendFile(res, join(REPO, "crates/nexty-paint/tests/data/k13-16x16.ico"));
+      sendFile(res, join(REPO, "crates/lavacat-paint/tests/data/k13-16x16.ico"));
       return;
     }
     if (K13_IMAGES[decoded]) {
-      sendFile(res, join(REPO, "crates/nexty-paint/tests/data", K13_IMAGES[decoded]));
+      sendFile(res, join(REPO, "crates/lavacat-paint/tests/data", K13_IMAGES[decoded]));
       return;
     }
 
@@ -165,5 +165,5 @@ http
     send(res, 404, { "Content-Type": "text/plain; charset=utf-8" }, "not found");
   })
   .listen(PORT, "127.0.0.1", () => {
-    console.log(`Nexty acceptance server: http://127.0.0.1:${PORT}`);
+    console.log(`LavaCat acceptance server: http://127.0.0.1:${PORT}`);
   });

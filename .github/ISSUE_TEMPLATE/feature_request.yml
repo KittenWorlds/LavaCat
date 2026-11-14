@@ -1,0 +1,86 @@
+name: 功能建议
+description: 提议补齐某项规范能力、性能优化或工程改进
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交之前请先看 [`AGENTS.md`](https://github.com/KittenWorlds/LavaCat/blob/main/AGENTS.md)
+        与 [`docs/plans/`](https://github.com/KittenWorlds/LavaCat/tree/main/docs/plans)：
+        路线图上已有的能力请直接引用对应条目，避免重复讨论。
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 类型
+      options:
+        - 规范能力补齐（缺失的 CSS / DOM / HTML 行为）
+        - 性能（布局、光栅、整形、网络）
+        - 正确性 / 稳定性（竞态、防御、错误处理）
+        - 工程与 CI
+        - 文档
+    validations:
+      required: true
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: 涉及层
+      options:
+        - 解析（lavacat-html）
+        - DOM / 事件（lavacat-dom）
+        - 级联 / 样式（lavacat-css）
+        - 布局（lavacat-layout）
+        - 文字整形（lavacat-text）
+        - 绘制 / 光栅（lavacat-paint）
+        - 网络（lavacat-network）
+        - 脚本（JSRT）
+        - 外壳 / 输入（lavacat-chrome）
+        - 跨层 / 其它
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决的问题
+      description: 当前行为哪里不够，谁受影响（页面类型、调用方、性能数字）
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: |
+        能复用成熟 crate 就写明是哪个；需要自研请说明为什么现有轮子不够
+        （AGENTS.md 的自研三条件）
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 替代方案
+      description: 考虑过但不打算采用的做法，以及放弃理由
+    validations:
+      required: false
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 影响面
+      description: |
+        是否改公共 API、是否新增 feature、是否需要新依赖（新依赖必须配 ADR +
+        deny.toml 许可证核对）、是否需要实机验收页面
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收判据
+      description: 怎样算做完：规范条款、WPT 用例、基准数字或验收页面路径
+    validations:
+      required: true

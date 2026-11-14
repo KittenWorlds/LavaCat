@@ -1,16 +1,16 @@
 [workspace]
-# Nexty workspace（MusKitty 不造轮子分支）。
+# LavaCat workspace（MusKitty 不造轮子分支）。
 # 分层与 crate 选型见 docs/decisions/2026-10-01-crate-selection.md
 members = [
-    "crates/nexty-dom",
-    "crates/nexty-jsrt-rquickjs",
-    "crates/nexty-html",
-    "crates/nexty-css",
-    "crates/nexty-layout",
-    "crates/nexty-text",
-    "crates/nexty-paint",
-    "crates/nexty-network",
-    "crates/nexty-chrome",
+    "crates/lavacat-dom",
+    "crates/lavacat-jsrt-rquickjs",
+    "crates/lavacat-html",
+    "crates/lavacat-css",
+    "crates/lavacat-layout",
+    "crates/lavacat-text",
+    "crates/lavacat-paint",
+    "crates/lavacat-network",
+    "crates/lavacat-chrome",
 ]
 
 resolver = "2"
@@ -19,7 +19,7 @@ resolver = "2"
 version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
-repository = "https://github.com/Ink-dark/Nexty"
+repository = "https://github.com/KittenWorlds/LavaCat"
 # MSRV 基线：1.90。取依赖中最高 MSRV 并留出余量
 # （vello_cpu 的 MSRV 历史在 1.88–1.92 间抖动，
 #  见 docs/decisions/2026-10-01-crate-selection.md）
