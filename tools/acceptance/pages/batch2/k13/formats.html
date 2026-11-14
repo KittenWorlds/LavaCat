@@ -14,7 +14,7 @@
 </head>
 <body>
 <h1>K13 图片格式：png / jpeg / gif / webp 并排</h1>
-<p>四张 8×8 fixture（<code>crates/nexty-paint/tests/data/gen_k13_fixtures.py</code> 生成，
+<p>四张 8×8 fixture（<code>crates/lavacat-paint/tests/data/gen_k13_fixtures.py</code> 生成，
 经 <code>/k13/img/*</code> 路由出图），以 <code>width/height</code> 属性放大到 64×64 绘制。
 每张应为同一幅四象限色块：<b>左上红、右上绿、左下蓝、右下白</b>。</p>
 
@@ -27,6 +27,6 @@
 <p>1. 四张图全部出现（不进错误页、不缺图缺尺寸）；<br>
 2. 每张均为四象限色块：左上红 / 右上绿 / 左下蓝 / 右下白；<br>
 3. jpeg / webp 允许有损噪点，象限主色可辨即可；gif 与 png 应基本一致。</p>
-<p class="note">解码路径：字节 → nexty-paint <code>decode</code>（内容嗅探）→ RGBA8 → DrawImage 放大绘制。</p>
+<p class="note">解码路径：字节 → lavacat-paint <code>decode</code>（内容嗅探）→ RGBA8 → DrawImage 放大绘制。</p>
 </body>
 </html>

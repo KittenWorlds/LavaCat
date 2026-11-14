@@ -9,7 +9,7 @@
   `cargo fmt --check`、`cargo clippy -D warnings`、三平台（Linux/macOS/Windows）
   `cargo test`、`cargo deny check`、`cargo about` 与 MSRV(1.90) 校验。
 - **Release**（`.github/workflows/release.yml`）：推送 `v*` 标签（或手动
-  `workflow_dispatch`）时，在原生 runner 上构建 `nexty` 二进制（Linux x86_64 /
+  `workflow_dispatch`）时，在原生 runner 上构建 `lavacat` 二进制（Linux x86_64 /
   Windows x86_64），打包为 `tar.gz` 并附 `sha256`，连同 `dependencies.html`
   许可证清单一起发布为 GitHub Release。
 
@@ -26,6 +26,6 @@ git push origin v0.1.0
 ## 本地构建
 
 ```bash
-cargo run -p nexty-chrome --bin nexty   # 启动浏览器外壳
+cargo run -p lavacat-chrome --bin lavacat   # 启动浏览器外壳
 cargo test --workspace                   # 运行全部测试
 ```

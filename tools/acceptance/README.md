@@ -1,4 +1,4 @@
-# Nexty 实机验收资产
+# LavaCat 实机验收资产
 
 浏览器外壳没有无头模式（winit 窗口 + wgpu surface，无法在 CI 里自动化），
 所以历轮验收页面过去散落在本机 `.workbuddy/`，不可复现、也无法防回归。
@@ -15,8 +15,8 @@ PORT=9000 node tools/acceptance/server.cjs
 浏览器侧：
 
 ```bash
-cargo build -p nexty-chrome --bin nexty --release
-./target/release/nexty.exe
+cargo build -p lavacat-chrome --bin lavacat --release
+./target/release/lavacat.exe
 ```
 
 窗口起来后在地址栏（`Ctrl+L`）输入 `http://127.0.0.1:8472/` 打开资产索引页，
@@ -124,5 +124,5 @@ URL + 会话缓存查询，未命中起后台抓取线程，就绪后经 `Favico
 3. 在 `pages/index.html` 索引页登记「路由 / 资产 / 判据」，并在本 README 的回归
    清单里加一行；只加文件不登记视为未完成。
 4. 依赖二进制（图片/字体）优先复用仓库已有文件（如
-   `crates/nexty-text/tests/data/SpaceMono-Regular.ttf`），避免重复入库。
+   `crates/lavacat-text/tests/data/SpaceMono-Regular.ttf`），避免重复入库。
 5. 生成类资产（GBK hex）保留 UTF-8 源 + 生成脚本，脚本幂等。

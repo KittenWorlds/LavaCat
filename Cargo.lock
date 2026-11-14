@@ -1463,6 +1463,96 @@ dependencies = [
 ]
 
 [[package]]
+name = "lavacat-chrome"
+version = "0.1.35"
+dependencies = [
+ "arboard",
+ "image",
+ "lavacat-css",
+ "lavacat-dom",
+ "lavacat-html",
+ "lavacat-jsrt-rquickjs",
+ "lavacat-layout",
+ "lavacat-network",
+ "lavacat-paint",
+ "lavacat-text",
+ "pollster",
+ "wgpu",
+ "winit",
+]
+
+[[package]]
+name = "lavacat-css"
+version = "0.1.19"
+dependencies = [
+ "cssparser",
+ "lavacat-dom",
+ "lavacat-html",
+ "precomputed-hash",
+ "selectors",
+]
+
+[[package]]
+name = "lavacat-dom"
+version = "0.1.6"
+
+[[package]]
+name = "lavacat-html"
+version = "0.1.6"
+dependencies = [
+ "html5ever",
+ "lavacat-dom",
+ "lavacat-jsrt-rquickjs",
+]
+
+[[package]]
+name = "lavacat-jsrt-rquickjs"
+version = "0.1.1"
+dependencies = [
+ "lavacat-dom",
+ "rquickjs",
+]
+
+[[package]]
+name = "lavacat-layout"
+version = "0.1.30"
+dependencies = [
+ "harfrust",
+ "lavacat-css",
+ "lavacat-dom",
+ "lavacat-html",
+ "lavacat-text",
+ "taffy",
+ "unicode-segmentation",
+]
+
+[[package]]
+name = "lavacat-network"
+version = "0.1.6"
+dependencies = [
+ "encoding_rs",
+ "reqwest",
+ "url",
+]
+
+[[package]]
+name = "lavacat-paint"
+version = "0.1.10"
+dependencies = [
+ "image",
+ "lavacat-text",
+ "vello_cpu",
+]
+
+[[package]]
+name = "lavacat-text"
+version = "0.1.9"
+dependencies = [
+ "parley",
+ "skrifa",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1687,96 +1777,6 @@ name = "new_debug_unreachable"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
-
-[[package]]
-name = "nexty-chrome"
-version = "0.1.35"
-dependencies = [
- "arboard",
- "image",
- "nexty-css",
- "nexty-dom",
- "nexty-html",
- "nexty-jsrt-rquickjs",
- "nexty-layout",
- "nexty-network",
- "nexty-paint",
- "nexty-text",
- "pollster",
- "wgpu",
- "winit",
-]
-
-[[package]]
-name = "nexty-css"
-version = "0.1.19"
-dependencies = [
- "cssparser",
- "nexty-dom",
- "nexty-html",
- "precomputed-hash",
- "selectors",
-]
-
-[[package]]
-name = "nexty-dom"
-version = "0.1.6"
-
-[[package]]
-name = "nexty-html"
-version = "0.1.6"
-dependencies = [
- "html5ever",
- "nexty-dom",
- "nexty-jsrt-rquickjs",
-]
-
-[[package]]
-name = "nexty-jsrt-rquickjs"
-version = "0.1.1"
-dependencies = [
- "nexty-dom",
- "rquickjs",
-]
-
-[[package]]
-name = "nexty-layout"
-version = "0.1.30"
-dependencies = [
- "harfrust",
- "nexty-css",
- "nexty-dom",
- "nexty-html",
- "nexty-text",
- "taffy",
- "unicode-segmentation",
-]
-
-[[package]]
-name = "nexty-network"
-version = "0.1.6"
-dependencies = [
- "encoding_rs",
- "reqwest",
- "url",
-]
-
-[[package]]
-name = "nexty-paint"
-version = "0.1.10"
-dependencies = [
- "image",
- "nexty-text",
- "vello_cpu",
-]
-
-[[package]]
-name = "nexty-text"
-version = "0.1.9"
-dependencies = [
- "parley",
- "skrifa",
-]
 
 [[package]]
 name = "num-traits"
