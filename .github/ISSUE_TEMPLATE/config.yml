@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 硬约束与工作流
+    url: https://github.com/KittenWorlds/LavaCat/blob/main/AGENTS.md
+    about: 提 issue 之前先读 AGENTS.md：规范基准、依赖政策、feature 拆分与提交纪律都在里面
+  - name: 架构决策与阶段计划
+    url: https://github.com/KittenWorlds/LavaCat/tree/main/docs
+    about: ADR（选型 / 自研决策）、路线图、性能基线与执行报告
+  - name: 贡献流程
+    url: https://github.com/KittenWorlds/LavaCat/blob/main/CONTRIBUTING.md
+    about: 环境准备、验证命令、提交格式与 PR 要求

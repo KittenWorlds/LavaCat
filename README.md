@@ -27,5 +27,10 @@ git push origin v0.1.0
 
 ```bash
 cargo run -p lavacat-chrome --bin lavacat   # 启动浏览器外壳
-cargo test --workspace                   # 运行全部测试
+cargo test --workspace                     # 运行全部测试
 ```
+
+## 贡献
+
+见 [`CONTRIBUTING.md`](CONTRIBUTING.md)（环境准备、验证命令、提交格式与 PR 要求）；
+参与即表示遵守 [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)。
