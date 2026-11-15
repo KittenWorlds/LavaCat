@@ -55,7 +55,9 @@ CSS Overflow 3 §2.2 and Compositing and Blending 1 §5.1 / §10.1 define the re
 clipping and source-over behavior. Rasterized RGBA8 layers introduce small
 rounding differences: the rich regression corpus (text, alpha images, nested
 clips, gradients, rounded shapes, tile boundaries and fractional offsets) permits
-1 level for tiles and 2 for the final opaque composite. This is a measured test
+1 level in premultiplied color/alpha for transparent tiles and 2 for the
+final opaque composite. Unpremultiplied RGB is not a useful error metric for
+very low-alpha edge pixels, where division magnifies tiny rounding differences. This is a measured test
 tolerance, not a guarantee for every future backend or unmodeled effect.
 
 Manual acceptance page: `/performance/scroll-cache.html`.

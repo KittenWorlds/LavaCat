@@ -55,7 +55,30 @@ fn rich_bitmap_and_layered_frames_match_direct_raster_with_rgba8_tolerance() {
             .max()
             .unwrap();
         println!("tiles offset={offset} diffs={diffs} maxdiff={maxdiff}");
-        assert!(maxdiff <= 1, "tile maxdiff={maxdiff} at {offset}");
+        // Comparing unpremultiplied RGB overweights nearly transparent edges:
+        // a one-step premultiplied rounding error can expand to several RGB
+        // steps after division by tiny alpha. Compare actual covered color.
+        let premult_error = actual
+            .data
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .zip(direct.data.as_chunks::<4>().0.iter())
+            .map(|(a, b)| {
+                let mut error = a[3].abs_diff(b[3]);
+                for c in 0..3 {
+                    let ac = (u32::from(a[c]) * u32::from(a[3]) + 127) / 255;
+                    let bc = (u32::from(b[c]) * u32::from(b[3]) + 127) / 255;
+                    error = error.max(ac.abs_diff(bc) as u8);
+                }
+                error
+            })
+            .max()
+            .unwrap();
+        assert!(
+            premult_error <= 1,
+            "tile premultiplied error={premult_error}, raw RGB error={maxdiff} at {offset}"
+        );
         let background = Scene {
             commands: pipeline::canvas_background_commands(&page, 400.0, 640.0),
             ..Scene::default()

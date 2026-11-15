@@ -79,6 +79,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace
       - name: JsRunner native IPC process tests
+        if: ${{ !cancelled() }}
         run: cargo test -p lavacat-jsrunner --features process-tests --test process
 
   # ---------- 依赖安全 / 许可证门禁（cargo-deny）----------
