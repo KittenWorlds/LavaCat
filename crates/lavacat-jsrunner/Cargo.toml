@@ -1,0 +1,41 @@
+[package]
+name = "lavacat-jsrunner"
+version = "0.1.0"
+description = "Opt-in isolated JsRunner process and validated shared layout snapshots"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[features]
+default = ["controller", "quickjs"]
+controller = []
+# Native OS IPC integration tests; CI enables this explicitly on all platforms.
+process-tests = ["controller", "quickjs"]
+quickjs = ["dep:lavacat-chrome", "dep:lavacat-html", "dep:lavacat-dom", "dep:lavacat-css", "dep:lavacat-layout", "dep:lavacat-text"]
+
+[dependencies]
+ipc-channel = "0.23.1"
+rkyv = { version = "0.8.18", features = ["unaligned", "little_endian", "pointer_width_32"] }
+serde = { version = "1", features = ["derive"] }
+lavacat-chrome = { path = "../lavacat-chrome", version = "0.1.37", default-features = false, features = ["pipeline", "script"], optional = true }
+lavacat-html = { path = "../lavacat-html", version = "0.1.6", optional = true }
+lavacat-dom = { path = "../lavacat-dom", version = "0.1.6", optional = true }
+lavacat-css = { path = "../lavacat-css", version = "0.1.19", optional = true }
+lavacat-layout = { path = "../lavacat-layout", version = "0.1.30", optional = true }
+lavacat-text = { path = "../lavacat-text", version = "0.1.11", optional = true }
+
+[[bin]]
+name = "lavacat-jsrunner-quickjs"
+path = "src/main.rs"
+required-features = ["quickjs"]
+
+[[bin]]
+name = "lavacat-jsrunner-stalled-peer"
+path = "tests/support/stalled.rs"
+required-features = ["process-tests"]
+
+[[bin]]
+name = "lavacat-jsrunner-bad-abi"
+path = "tests/support/bad-abi.rs"
+required-features = ["process-tests"]

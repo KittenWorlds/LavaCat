@@ -35,7 +35,9 @@ rasterized. Build a command vertical-bound index once per display-list revision;
 retain all clip transitions and send only intersecting paint commands to new
 tiles. Text bounds come from skrifa OpenType glyph outlines through the text
 facade, including actual glyph offsets and a coverage guard; unsupported or
-invalid bounds disable culling for that command. No font-size heuristic is used.
+invalid bounds disable culling for that command. Fonts with COLR, bitmap or SVG
+paint tables also bypass outline-only culling, because their chosen painted
+representation can exceed an empty or smaller base outline. No font-size heuristic is used.
 `skrifa` was already present as a parley dependency and text dev-dependency; it
 is promoted within the text facade for this exact-bounds API (Apache-2.0/MIT,
 existing dependency graph / license policy). Retain only visible tiles and at most 64 MiB. Oversized viewports and

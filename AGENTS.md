@@ -45,8 +45,8 @@ cargo about generate about.hbs -o docs/dependencies.html   # 重新生成第三�
 #   NOTICE/归属声明清单、多重许可（SPDX 含 AND）人工核对表。
 # 这两块无法写在 .hbs 里——cargo-about 的模板上下文只有
 # overview/licenses/crates，没有 notices，也没有「同一 crate 跨几个 license 组」。
-# 脚本在 .workbuddy/（本机代理数据，不入库），流程可重复执行且幂等：
-python .workbuddy/collect_notices.py && python .workbuddy/inject.py
+# 注入脚本已入库 tools/licenses/，流程可重复执行且幂等：
+python tools/licenses/inject-notes.py .workbuddy/about.json docs/dependencies.html
 
 # 单个 crate 目录下（例如 crates/lavacat-xxx/）
 cargo check                             # 检查该 crate（必须零 warning）
@@ -247,3 +247,13 @@ runner 适配 crate（lavacat-jsrt-rquickjs，0.1.1）为 workspace member、非
 - 别为未来需求加参数。真有需求时再加
 - 别自己写 interner / 解析器 / 数据结构——需要时先找标准库或成熟 crate
 - 需要多次 `clone()` 时先写出来，等 profiling 证明热路径以后再去掉
+
+## Opt-in JsRunner process prototype (2026-11-15)
+
+`lavacat-jsrunner` is a non-facade runner/controller workspace member. All its
+code forbids unsafe. Features: `controller` → process lifecycle/health/handoff;
+`quickjs` → child runtime + executable; `process-tests` → native IPC integration
+tests (explicitly run by CI on Linux/macOS/Windows). `snapshot`/`protocol` are
+shared private wire modules. Existing window behavior is unchanged; migrating
+its painting/input path is still required before issue #4 can be closed.
+See `docs/decisions/2026-11-15-jsrunner-process-prototype.md`.

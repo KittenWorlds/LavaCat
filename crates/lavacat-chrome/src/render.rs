@@ -266,14 +266,17 @@ fn command_vertical_bounds(scene: &Scene) -> Vec<Option<(f32, f32)>> {
                     (min, max)
                 }
                 Command::StrokeRect { rect, width, .. } => (
-                    rect.y - width.abs() / 2.0,
-                    rect.y + rect.height + width.abs() / 2.0,
+                    rect.y.min(rect.y + rect.height) - width.abs() / 2.0,
+                    rect.y.max(rect.y + rect.height) + width.abs() / 2.0,
                 ),
                 Command::FillRect { rect, .. }
                 | Command::FillRoundedRect { rect, .. }
                 | Command::StrokeRoundedRect { rect, .. }
                 | Command::FillGradient { rect, .. }
-                | Command::DrawImage { rect, .. } => (rect.y, rect.y + rect.height),
+                | Command::DrawImage { rect, .. } => (
+                    rect.y.min(rect.y + rect.height),
+                    rect.y.max(rect.y + rect.height),
+                ),
             };
             (min.is_finite() && max.is_finite()).then_some((min, max))
         })
@@ -446,6 +449,31 @@ mod bitmap_tests {
             ],
             ..Scene::default()
         }
+    }
+
+    #[test]
+    fn inverted_rectangles_keep_the_backend_paint_semantics() {
+        let scene = Scene {
+            commands: vec![Command::FillRect {
+                rect: Rect {
+                    x: 0.0,
+                    y: 500.0,
+                    width: 32.0,
+                    height: -500.0,
+                },
+                color: Color::opaque(255, 0, 0),
+            }],
+            ..Scene::default()
+        };
+        let size = Size {
+            width: 32,
+            height: 200,
+        };
+        let backend = VelloCpuRasterizer::new();
+        let cached = PageRasterCache::default()
+            .rasterize(&backend, &scene, 1, size, 0.0)
+            .unwrap();
+        assert_eq!(cached, backend.rasterize(&scene, size).unwrap());
     }
 
     #[test]

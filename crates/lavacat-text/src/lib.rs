@@ -151,6 +151,18 @@ impl ResolvedFont {
             return None;
         }
         let font = skrifa::FontRef::from_index(&self.data, self.index).ok()?;
+        // glifo may select COLR/bitmap/SVG paint instead of the base outline.
+        // Its painted extent need not fit that outline (e.g. empty emoji base).
+        // Keep the whole command for those fonts until representation-specific
+        // painted bounds are available.
+        if [
+            b"COLR", b"CBDT", b"CBLC", b"EBDT", b"EBLC", b"sbix", b"SVG ",
+        ]
+        .into_iter()
+        .any(|tag| font.table_data(skrifa::Tag::new(tag)).is_some())
+        {
+            return None;
+        }
         let metrics = font.glyph_metrics(
             skrifa::instance::Size::new(size),
             skrifa::instance::LocationRef::default(),
@@ -834,6 +846,44 @@ impl TextShaper for ParleyTextShaper {
 #[cfg(all(test, feature = "shaping"))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn colored_font_tables_disable_outline_only_culling_bounds() {
+        let mut bytes = test_font("SpaceMono-Regular.ttf");
+        let count = u16::from_be_bytes([bytes[4], bytes[5]]) as usize;
+        let mut records: Vec<[u8; 16]> = bytes[12..12 + count * 16]
+            .as_chunks::<16>()
+            .0
+            .iter()
+            .copied()
+            .collect();
+        let name = records
+            .iter_mut()
+            .find(|record| &record[..4] == b"name")
+            .unwrap();
+        name[..4].copy_from_slice(b"COLR");
+        records.sort_by_key(|record| [record[0], record[1], record[2], record[3]]);
+        for (slot, record) in bytes[12..12 + count * 16]
+            .as_chunks_mut::<16>()
+            .0
+            .iter_mut()
+            .zip(records)
+        {
+            slot.copy_from_slice(&record);
+        }
+        let font = ResolvedFont {
+            data: std::sync::Arc::from(bytes),
+            index: 0,
+            id: 0,
+        };
+        assert!(
+            skrifa::FontRef::from_index(font.data(), 0)
+                .unwrap()
+                .table_data(skrifa::Tag::new(b"COLR"))
+                .is_some()
+        );
+        assert_eq!(font.glyph_bounds(1, 16.0), None);
+    }
 
     #[test]
     fn repeated_shaping_and_metrics_reuse_width_independent_results() {
