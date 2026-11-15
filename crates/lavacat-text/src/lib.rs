@@ -851,12 +851,7 @@ mod tests {
     fn colored_font_tables_disable_outline_only_culling_bounds() {
         let mut bytes = test_font("SpaceMono-Regular.ttf");
         let count = u16::from_be_bytes([bytes[4], bytes[5]]) as usize;
-        let mut records: Vec<[u8; 16]> = bytes[12..12 + count * 16]
-            .as_chunks::<16>()
-            .0
-            .iter()
-            .copied()
-            .collect();
+        let mut records: Vec<[u8; 16]> = bytes[12..12 + count * 16].as_chunks::<16>().0.to_vec();
         let name = records
             .iter_mut()
             .find(|record| &record[..4] == b"name")
