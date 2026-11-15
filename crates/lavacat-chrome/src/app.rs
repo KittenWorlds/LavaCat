@@ -26,7 +26,7 @@ use winit::window::{CursorIcon, Window, WindowId};
 
 use crate::history::History;
 use crate::pipeline::{self, HoverKind, Page};
-use crate::render::{RenderError, RenderThread};
+use crate::render::{PageFrame, RenderError, RenderThread};
 use crate::scrollbar::{self, ScrollGeometry, Scrollbar, ScrollbarHit};
 use crate::selection::{self, Selection};
 use crate::ui::{self, AddressBar, BAR_HEIGHT, BarCommand, CaretDirection, UiEvent};
@@ -949,6 +949,7 @@ impl BrowserApp {
         // 用 html，否则 body，都无回落白；视口坐标系，不随滚动平移。画布
         // 必须不透明：透明像素直接 blit 给 surface（alpha_mode Auto）在部分
         // 后端表现为黑屏/花屏。被传播元素的自身背景由 emit 抑制（搬移语义）。
+        let mut page_frame = None;
         let mut scene = match (&self.page, &self.root) {
             (Some(page), Some(root)) => {
                 let page_scene = self.scene_cache.scene_for(
@@ -958,14 +959,18 @@ impl BrowserApp {
                     width,
                     &highlights,
                 );
-                let mut scene = page_scene.translated(0.0, BAR_HEIGHT - self.scroll_y);
-                for (index, command) in pipeline::canvas_background_commands(page, width, height)
-                    .into_iter()
-                    .enumerate()
-                {
-                    scene.commands.insert(index, command);
-                }
-                scene
+                let page_layer = page_scene.clone();
+                page_frame = Some(PageFrame {
+                    page: page_layer,
+                    generation: self.scene_cache.emits() as u64,
+                    origin_y: BAR_HEIGHT - self.scroll_y,
+                    background: Scene {
+                        commands: pipeline::canvas_background_commands(page, width, height),
+                        ..Scene::default()
+                    },
+                    overlay: Scene::default(),
+                });
+                Scene::default()
             }
             _ => {
                 // 无页面（启动空窗）：无从传播，固定白底。
@@ -1052,12 +1057,19 @@ impl BrowserApp {
             return;
         };
         self.render_in_flight = true;
-        if let Err(scene) = renderer.request(scene, viewport, reply.clone()) {
+        let failed = if let Some(mut frame) = page_frame {
+            frame.overlay = scene;
+            renderer
+                .request_page(frame, viewport, reply.clone())
+                .is_err()
+        } else {
+            renderer.request(scene, viewport, reply.clone()).is_err()
+        };
+        if failed {
             // 渲染线程已终止：就地降级为灰屏，不留在途状态
             self.render_in_flight = false;
             eprintln!("render thread terminated");
             gpu.clear(window, [0.6, 0.6, 0.6, 1.0]);
-            drop(scene);
         }
     }
 

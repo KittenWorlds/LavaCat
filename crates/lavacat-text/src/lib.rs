@@ -141,6 +141,25 @@ impl ResolvedFont {
         self.index
     }
 
+    /// Outline bounds at CSS pixel size, in font coordinates (y points up).
+    /// OpenType glyf/CFF bounds are read by skrifa; no heuristic line-height
+    /// bound is used. Returns None for invalid/unsupported outlines, in which
+    /// case a consumer must retain the glyph rather than cull it.
+    pub fn glyph_bounds(&self, glyph: u32, size: f32) -> Option<[f32; 4]> {
+        use skrifa::MetadataProvider;
+        if !size.is_finite() || size <= 0.0 {
+            return None;
+        }
+        let font = skrifa::FontRef::from_index(&self.data, self.index).ok()?;
+        let metrics = font.glyph_metrics(
+            skrifa::instance::Size::new(size),
+            skrifa::instance::LocationRef::default(),
+        );
+        let bounds = metrics.bounds(skrifa::GlyphId::new(glyph))?;
+        let values = [bounds.x_min, bounds.y_min, bounds.x_max, bounds.y_max];
+        values.iter().all(|v| v.is_finite()).then_some(values)
+    }
+
     /// 字体实例标识：同一来源字体的多次解析共享同一 id。
     #[must_use]
     pub fn id(&self) -> u64 {
@@ -521,11 +540,27 @@ fn resolve_font_in(
     resolved
 }
 
+// Width does not participate in shaping (CSS Text 3 §5); only placement wraps.
+// Retained keys/results are bounded independently of the shared font byte cache.
+#[cfg(feature = "shaping")]
+const SHAPE_CACHE_BUDGET: usize = 32 * 1024 * 1024;
+#[cfg(feature = "shaping")]
+#[derive(Default)]
+struct ShapingCache {
+    shapes: HashMap<(Vec<String>, u32, String), ShapedText>,
+    metrics: HashMap<(Vec<String>, u32), FontMetrics>,
+    bytes: usize,
+}
+
 /// [`TextShaper`] 的 parley 实现。
 ///
 /// 持有 fontique 字体集合（系统字体与已注入的注册 face）与 parley 布局
 /// 上下文；上下文可复用，用 `RefCell` 提供内部可变性（`shape` 只需
 /// `&self`）。
+/// Width-independent results survive relayouts (CSS Text 3 §5). The shaping
+/// cache retains at most 32 MiB / 16384 entries; font registration invalidates it.
+/// Metrics retain at most 256 small family keys. System font changes require a
+/// new shaper, as with the underlying fontique collection.
 #[cfg(feature = "shaping")]
 pub struct ParleyTextShaper {
     font_context: RefCell<parley::FontContext>,
@@ -537,10 +572,13 @@ pub struct ParleyTextShaper {
     /// 字体（msyh.ttc）约 20 MB，按文本 chunk 数放大后布局期内存以 GB
     /// 计（T1 基准实测：2,000 段页面冲到 9 GB 提交内存后分配失败 abort）。
     font_cache: RefCell<HashMap<(u64, u32), ResolvedFont>>,
+    shaping_cache: RefCell<ShapingCache>,
     /// 会话级 @font-face 注册表（可选）；整形 / 解析前增量注入 font_context。
     registry: Option<FontRegistry>,
     /// 注册表同步代次（已注入的注册 face 数）。
     registry_applied: Cell<usize>,
+    #[cfg(test)]
+    layout_builds: Cell<usize>,
 }
 
 #[cfg(feature = "shaping")]
@@ -557,8 +595,11 @@ impl Default for ParleyTextShaper {
             font_context: RefCell::new(parley::FontContext::new()),
             layout_context: RefCell::new(parley::LayoutContext::new()),
             font_cache: RefCell::new(HashMap::new()),
+            shaping_cache: RefCell::new(ShapingCache::default()),
             registry: None,
             registry_applied: Cell::new(0),
+            #[cfg(test)]
+            layout_builds: Cell::new(0),
         }
     }
 }
@@ -601,6 +642,9 @@ impl ParleyTextShaper {
         if let Some(registry) = &self.registry {
             let mut applied = self.registry_applied.get();
             registry.sync_into(font_context, &mut applied);
+            if applied != self.registry_applied.get() {
+                *self.shaping_cache.borrow_mut() = ShapingCache::default();
+            }
             self.registry_applied.set(applied);
         }
     }
@@ -614,6 +658,8 @@ impl ParleyTextShaper {
         if style.families.is_empty() {
             return Err(TextError::FontUnavailable);
         }
+        #[cfg(test)]
+        self.layout_builds.set(self.layout_builds.get() + 1);
         // CSS font-family 列表的解析（族名/引号/generic 关键字/回退顺序）
         // 交给 parley 的 FontFamily::Source
         let family_list = style.families.join(", ");
@@ -647,6 +693,15 @@ impl TextShaper for ParleyTextShaper {
             });
         }
 
+        self.sync_registry(&mut self.font_context.borrow_mut());
+        let key = (
+            style.families.clone(),
+            style.size.to_bits(),
+            text.to_owned(),
+        );
+        if let Some(shaped) = self.shaping_cache.borrow().shapes.get(&key) {
+            return Ok(shaped.clone());
+        }
         let layout = self.build_layout(text, style)?;
 
         // 按脚本回退后一个 layout 可能含多个字体 run：收集去重成字体表，
@@ -714,7 +769,7 @@ impl TextShaper for ParleyTextShaper {
             .width()
             .max(glyphs.last().map_or(0.0, |glyph| glyph.x + glyph.advance));
 
-        Ok(ShapedText {
+        let shaped = ShapedText {
             glyphs,
             fonts,
             // parley 的行宽按断行测量语义**不含行尾空白**，而本层契约是含
@@ -722,20 +777,56 @@ impl TextShaper for ParleyTextShaper {
             // space_after_previous）——取字形右缘与行宽的较大者。
             width,
             height: layout.height(),
-        })
+        };
+        let bytes = text.len()
+            + style.families.iter().map(|name| name.len()).sum::<usize>()
+            + style.families.len() * std::mem::size_of::<String>()
+            + shaped.glyphs.capacity() * std::mem::size_of::<Glyph>()
+            + shaped.fonts.capacity() * std::mem::size_of::<ResolvedFont>()
+            + 256;
+        if bytes <= SHAPE_CACHE_BUDGET {
+            let mut cache = self.shaping_cache.borrow_mut();
+            if cache.bytes + bytes > SHAPE_CACHE_BUDGET || cache.shapes.len() >= 16384 {
+                cache.shapes.clear();
+                cache.bytes = 0;
+            }
+            cache.bytes += bytes;
+            cache.shapes.insert(key, shaped.clone());
+        }
+        Ok(shaped)
     }
 
     fn metrics(&self, style: &TextStyle) -> Result<FontMetrics, TextError> {
+        self.sync_registry(&mut self.font_context.borrow_mut());
+        let key = (style.families.clone(), style.size.to_bits());
+        if let Some(metrics) = self.shaping_cache.borrow().metrics.get(&key) {
+            return Ok(*metrics);
+        }
         // 用不换行空格探针取度量：NBSP 在几乎所有字体中都有字形，
         // parley 的行度量来自 run 字体的 ascent/descent/leading
         let layout = self.build_layout("\u{00A0}", style)?;
         let line = layout.lines().next().ok_or(TextError::FontUnavailable)?;
         let metrics = line.metrics();
-        Ok(FontMetrics {
+        let metrics = FontMetrics {
             ascent: metrics.ascent,
             descent: metrics.descent,
             line_height: metrics.line_height,
-        })
+        };
+        let mut cache = self.shaping_cache.borrow_mut();
+        // Avoid retaining unbounded family names even in a small entry table.
+        if style
+            .families
+            .iter()
+            .map(|name| name.len() + std::mem::size_of::<String>())
+            .sum::<usize>()
+            <= 4096
+        {
+            if cache.metrics.len() >= 256 {
+                cache.metrics.clear();
+            }
+            cache.metrics.insert(key, metrics);
+        }
+        Ok(metrics)
     }
 }
 
@@ -743,6 +834,109 @@ impl TextShaper for ParleyTextShaper {
 #[cfg(all(test, feature = "shaping"))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn repeated_shaping_and_metrics_reuse_width_independent_results() {
+        let shaper = ParleyTextShaper::new();
+        let style = TextStyle {
+            families: vec!["serif".into()],
+            size: 16.0,
+        };
+        let expected = shaper.shape("cached resize text", &style).unwrap();
+        let metrics = shaper.metrics(&style).unwrap();
+        let builds = shaper.layout_builds.get();
+        for _ in 0..5 {
+            assert_eq!(
+                shaper.shape("cached resize text", &style).unwrap(),
+                expected
+            );
+            assert_eq!(shaper.metrics(&style).unwrap(), metrics);
+        }
+        assert_eq!(
+            shaper.layout_builds.get(),
+            builds,
+            "resize must not rebuild shaping"
+        );
+    }
+
+    #[test]
+    fn cache_keys_include_text_family_order_and_size_and_return_owned_results() {
+        let cached = ParleyTextShaper::new();
+        for (text, families, size) in [
+            ("resize", vec!["serif", "sans-serif"], 16.0),
+            ("changed", vec!["serif", "sans-serif"], 16.0),
+            ("resize", vec!["sans-serif", "serif"], 16.0),
+            ("resize", vec!["serif", "sans-serif"], 24.0),
+        ] {
+            let style = style(&families, size);
+            let cold = ParleyTextShaper::new();
+            let actual = cached.shape(text, &style).unwrap();
+            let expected = cold.shape(text, &style).unwrap();
+            assert_eq!(actual.glyphs, expected.glyphs);
+            assert_eq!(
+                (actual.width, actual.height),
+                (expected.width, expected.height)
+            );
+            assert_eq!(actual.fonts.len(), expected.fonts.len());
+            for (a, b) in actual.fonts.iter().zip(&expected.fonts) {
+                assert_eq!(a.data(), b.data());
+                assert_eq!(a.index(), b.index());
+            }
+            assert_eq!(
+                cached.metrics(&style).unwrap(),
+                cold.metrics(&style).unwrap()
+            );
+            let mut owned = cached.shape(text, &style).unwrap();
+            owned.glyphs.clear();
+            assert!(!cached.shape(text, &style).unwrap().glyphs.is_empty());
+        }
+        assert_eq!(
+            cached.layout_builds.get(),
+            7,
+            "four texts and three metrics styles"
+        );
+    }
+
+    #[test]
+    fn font_registration_invalidates_cached_fallback_and_metrics() {
+        let registry = FontRegistry::new();
+        let cached = ParleyTextShaper::with_registry(&registry);
+        let style = style(&["CacheLateWebFont"], 16.0);
+        cached.shape("later font", &style).unwrap();
+        cached.metrics(&style).unwrap();
+        let builds = cached.layout_builds.get();
+        registry
+            .register(
+                test_font("SpaceMono-Regular.ttf"),
+                face_descriptor("CacheLateWebFont", 400, FontStyle::Normal),
+            )
+            .unwrap();
+        let cold = ParleyTextShaper::with_registry(&registry);
+        let actual = cached.shape("later font", &style).unwrap();
+        assert_eq!(actual, cold.shape("later font", &style).unwrap());
+        assert_eq!(
+            cached.metrics(&style).unwrap(),
+            cold.metrics(&style).unwrap()
+        );
+        assert_eq!(cached.layout_builds.get(), builds + 2);
+        assert_eq!(
+            actual.fonts[0].data().as_ref(),
+            test_font("SpaceMono-Regular.ttf").as_slice()
+        );
+    }
+
+    #[test]
+    fn shaping_cache_evicts_when_retained_budget_is_full() {
+        let cached = ParleyTextShaper::new();
+        let style = style(&["serif"], 16.0);
+        let first = cached.shape("first", &style).unwrap();
+        // Simulate the accounting at the budget boundary without allocating 32 MiB.
+        cached.shaping_cache.borrow_mut().bytes = SHAPE_CACHE_BUDGET;
+        cached.shape("second", &style).unwrap();
+        assert_eq!(cached.shaping_cache.borrow().shapes.len(), 1);
+        assert!(cached.shaping_cache.borrow().bytes < SHAPE_CACHE_BUDGET);
+        assert_eq!(cached.shape("first", &style).unwrap(), first);
+    }
 
     fn shaper() -> ParleyTextShaper {
         ParleyTextShaper::new()

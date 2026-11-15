@@ -1,0 +1,8 @@
+<!doctype html><meta charset="utf-8"><title>CPU scroll cache regression</title>
+<style>body{margin:0;background:#678;font-family:serif}section{height:245px;border:3px solid #135;border-radius:12px;background:linear-gradient(90deg,#f90,#39f)}p{line-height:24px;color:rgba(30,40,80,.7)}.scroll{height:100px;overflow:auto;background:#fed}</style>
+<h1>CPU 位图缓存与 resize 验收</h1>
+<p>判据：上下滚动经过 256px 分块边界，文字、渐变、圆角和裁剪不撕裂。调整窗口宽度，文本重新换行；选区变化、容器滚动及脚本更新后不残留旧像素。浏览器地址栏与滚动条保持视口位置。</p>
+<section><p>第一块 / transparent text / 中文字体回退</p></section>
+<section><p>第二块 / tile boundary / 256px</p><div class="scroll"><p>嵌套滚动一</p><p>嵌套滚动二</p><p>嵌套滚动三</p><p>嵌套滚动四</p><p>嵌套滚动五</p></div></section>
+<section><p>第三块 / select this text and resize the window</p></section>
+<section><p>第四块 / return to the top and repeat</p></section>

@@ -18,6 +18,8 @@
 <h1>LavaCat 验收资产索引</h1>
 <p class="note">由 <code>node tools/acceptance/server.cjs</code> 提供。每条资产对应一条可复现的验收判据；完整回归清单见 <code>tools/acceptance/README.md</code>。此页刻意不用 table（table 布局尚未实现）。</p>
 
+<h2>性能回归</h2><div class="item"><h3><a href="/performance/scroll-cache.html">CPU 位图缓存与 resize</a></h3><p>滚动越过 256px 边界、改变宽度、选区与嵌套滚动后无旧像素；地址栏不随页面移动。</p></div>
+
 <h2>批次 1（K1 事件 / K2 绘制 / K3 导航网络 / K4 字体）</h2>
 
 <div class="item">
