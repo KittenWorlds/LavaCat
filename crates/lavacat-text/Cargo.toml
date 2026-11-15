@@ -1,7 +1,7 @@
 [package]
 name = "lavacat-text"
 description = "LavaCat 文本整形与字体 facade"
-version = "0.1.9"
+version = "0.1.11"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -17,14 +17,12 @@ shaping = ["dep:parley", "font-resolution"]
 # 字体文件解析：FontResolver / ResolvedFont 与 @font-face 注册表
 # （FontRegistry / FontFaceDescriptor），供 paint 取字体字节、chrome 注册
 # Web 字体。
-font-resolution = ["dep:parley"]
+font-resolution = ["dep:parley", "dep:skrifa"]
 
 [dependencies]
 # parley 内部经 fontique 选字、harfrust 整形；swash 自 parley 0.11 起不再参与
 parley = { version = "0.11.1", optional = true }
 
-[dev-dependencies]
-# 仅测试用：校验 ResolvedFont 字节可被 skrifa 读为合法 face。
-# 生产代码不引用 skrifa（字体解析走 parley），故不应进正式依赖——
-# 它是 parley 的传递依赖，留在这里只为测试断言。
-skrifa = "0.44.0"
+# Already present transitively via parley; used for exact outline bounds so
+# offscreen glyphs can be culled without guessing from font-size/advance.
+skrifa = { version = "0.44.0", optional = true }

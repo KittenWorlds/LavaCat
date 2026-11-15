@@ -29,7 +29,7 @@ use lavacat_chrome::pipeline;
 use lavacat_css::{MediaViewport, Stylesheet};
 use lavacat_dom::NodeId;
 use lavacat_html::ParseOptions;
-use lavacat_paint::{Image, Rasterizer, Size, VelloCpuRasterizer};
+use lavacat_paint::{Image, Size, VelloCpuRasterizer};
 use lavacat_text::ParleyTextShaper;
 
 /// 基准视口（与 app 默认窗口 1000×640 一致）。
@@ -239,6 +239,7 @@ impl Corpus {
         cache.reset_emits();
 
         let rasterizer = VelloCpuRasterizer::new();
+        let mut bitmap_cache = lavacat_chrome::render::PageRasterCache::default();
         let mut emit_samples = Vec::new();
         let mut raster_samples = Vec::new();
         for frame in 0..frames {
@@ -250,16 +251,18 @@ impl Corpus {
             } as f32;
             let start = Instant::now();
             let page_scene = cache.scene_for(0, &page, &root, VIEWPORT.width, &[]);
-            let scene = page_scene.translated(0.0, -scroll);
             emit_samples.push(ms(start.elapsed()));
             let start = Instant::now();
-            let pixmap = rasterizer
+            let pixmap = bitmap_cache
                 .rasterize(
-                    &scene,
+                    &rasterizer,
+                    page_scene,
+                    0,
                     Size {
                         width: VIEWPORT.width as u32,
                         height: VIEWPORT.height as u32,
                     },
+                    -scroll,
                 )
                 .expect("rasterize");
             raster_samples.push(ms(start.elapsed()));
@@ -328,7 +331,7 @@ fn run() {
         let (per_frame, runs, _events, shapes, metricses, total_events) =
             corpus.resize_storm(&shaper);
         println!(
-            "[{}] resize storm: {total_events} events @ {} events/frame -> pipeline runs {runs} (was {total_events} un-coalesced), median/frame {per_frame:.1} ms, shape {shapes} calls ({:.1}x chunks), metrics {metricses} calls",
+            "[{}] resize storm: {total_events} events @ {} events/frame -> pipeline runs {runs} (was {total_events} un-coalesced), median/frame {per_frame:.1} ms, shape {shapes} requests (backend cache enabled) ({:.1}x chunks), metrics {metricses} calls",
             corpus.name,
             RESIZE_EVENTS_PER_FRAME,
             shapes as f64 / chunks.max(1) as f64,

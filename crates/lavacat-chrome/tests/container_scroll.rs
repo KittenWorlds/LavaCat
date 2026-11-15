@@ -34,6 +34,8 @@ fn find_by_id(page: &pipeline::Page, id: &str) -> NodeId {
 }
 
 /// 布局一页（默认视口宽 400）。
+/// 各用例显式指定 24px 行高：6 行 = 144px、12 行 = 288px，
+/// 溢出判据不依赖 macOS / Linux / Windows 的默认字体度量（#12）。
 fn lay(page: &pipeline::Page, width: f32) -> Fragment {
     let shaper = ParleyTextShaper::new();
     pipeline::layout_page(page, &shaper, width).expect("root fragment")
@@ -72,7 +74,7 @@ fn scrollable_container_emits_clip_and_applies_scroll_offset() {
          <p style=\"margin: 0\">first</p><p style=\"margin: 0\">second</p>\
          <p style=\"margin: 0\">third</p><p style=\"margin: 0\">fourth</p>\
          <p style=\"margin: 0\">fifth</p><p style=\"margin: 0\">sixth</p></div></body>",
-        "body { margin: 0 }",
+        "body { margin: 0 } p { line-height: 24px }",
     );
     let root = lay(&page, 400.0);
 
@@ -121,7 +123,7 @@ fn hidden_container_clips_without_scrolling() {
          <p style=\"margin: 0\">first</p><p style=\"margin: 0\">second</p>\
          <p style=\"margin: 0\">third</p><p style=\"margin: 0\">fourth</p>\
          <p style=\"margin: 0\">fifth</p><p style=\"margin: 0\">sixth</p></div></body>",
-        "body { margin: 0 }",
+        "body { margin: 0 } p { line-height: 24px }",
     );
     let root = lay(&page, 400.0);
 
@@ -158,7 +160,7 @@ fn scroll_offsets_survive_relayout_and_clamp() {
          <p style=\"margin: 0\">first</p><p style=\"margin: 0\">second</p>\
          <p style=\"margin: 0\">third</p><p style=\"margin: 0\">fourth</p>\
          <p style=\"margin: 0\">fifth</p><p style=\"margin: 0\">sixth</p></div></body>",
-        "body { margin: 0 }",
+        "body { margin: 0 } p { line-height: 24px }",
     );
     let root = lay(&page, 400.0);
     let areas = pipeline::collect_container_scroll_areas(&root, &page.scroll_offsets);
@@ -202,7 +204,7 @@ fn two_containers_scroll_independently() {
          <p style=\"margin: 0\">b1</p><p style=\"margin: 0\">b2</p><p style=\"margin: 0\">b3</p>\
          <p style=\"margin: 0\">b4</p><p style=\"margin: 0\">b5</p><p style=\"margin: 0\">b6</p></div>\
          </body>",
-        "body { margin: 0 }",
+        "body { margin: 0 } p { line-height: 24px }",
     );
     let root = lay(&page, 400.0);
     let areas = pipeline::collect_container_scroll_areas(&root, &page.scroll_offsets);
@@ -252,7 +254,7 @@ fn wheel_chain_walks_innermost_first_and_bubbles_at_boundary() {
          <p style=\"margin: 0\">o2</p><p style=\"margin: 0\">o3</p><p style=\"margin: 0\">o4</p>\
          <p style=\"margin: 0\">o5</p><p style=\"margin: 0\">o6</p><p style=\"margin: 0\">o7</p>\
          <p style=\"margin: 0\">o8</p></div></body>",
-        "body { margin: 0 }",
+        "body { margin: 0 } p { line-height: 24px }",
     );
     let root = lay(&page, 400.0);
     let inner_node = find_by_id(&page, "inner");
@@ -316,7 +318,7 @@ fn container_scrollbar_geometry_and_drag() {
          <p style=\"margin: 0\">7</p><p style=\"margin: 0\">8</p><p style=\"margin: 0\">9</p>\
          <p style=\"margin: 0\">10</p><p style=\"margin: 0\">11</p><p style=\"margin: 0\">12</p>\
          </div></body>",
-        "body { margin: 0 }",
+        "body { margin: 0 } p { line-height: 24px }",
     );
     let root = lay(&page, 400.0);
     let areas = pipeline::collect_container_scroll_areas(&root, &page.scroll_offsets);

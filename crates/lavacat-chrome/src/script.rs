@@ -74,6 +74,15 @@ impl ScriptSession {
         Ok(Self { jsrt })
     }
 
+    /// Refresh the author-sheet input used by the CSSOM getComputedStyle hook
+    /// after a host reconciles dynamic style elements. Engine/DOM state and
+    /// listener registrations remain intact.
+    pub fn update_stylesheets(&mut self, stylesheets: &[Stylesheet]) {
+        self.jsrt
+            .runtime_mut()
+            .set_get_computed_style_hook(get_computed_style_hook(stylesheets));
+    }
+
     /// 编译并同步执行一段脚本（inline 语义），随后做微任务检查点。
     ///
     /// # Errors

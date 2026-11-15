@@ -3,6 +3,7 @@
 # 分层与 crate 选型见 docs/decisions/2026-10-01-crate-selection.md
 members = [
     "crates/lavacat-dom",
+    "crates/lavacat-jsrunner",
     "crates/lavacat-jsrt-rquickjs",
     "crates/lavacat-html",
     "crates/lavacat-css",
@@ -16,7 +17,6 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
 repository = "https://github.com/KittenWorlds/LavaCat"
